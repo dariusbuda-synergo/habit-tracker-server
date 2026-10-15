@@ -4,3 +4,6 @@ __pycache__/
 *.db
 .pytest_cache/
 .env
+
+# dev-agent-kit: feature worktrees live here during orchestration
+.claude/worktrees/
