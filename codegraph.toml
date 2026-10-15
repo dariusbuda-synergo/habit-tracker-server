@@ -1,0 +1,15 @@
+# codegraph configuration for habit-tracker-server (see ../dev-agent-kit/codegraph/codegraph.example.toml).
+# No uv.lock: the extractor indexes with this repository's own .venv (create it per AGENTS.md § Build, run, test).
+
+language = "python"
+
+# First match wins; the module name is the last pattern segment.
+modules = [
+  { pattern = "app/api",      kind = "api" },
+  { pattern = "app/services", kind = "service" },
+  { pattern = "app/models",   kind = "model" },
+  { pattern = "app",          kind = "app" },
+  { pattern = "tests",        kind = "test" },
+]
+
+exclude = [".claude/**", ".pytest_cache/**", "*.db"]

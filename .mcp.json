@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "../dev-agent-kit/bin/codegraph",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
