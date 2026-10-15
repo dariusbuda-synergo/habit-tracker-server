@@ -1,10 +1,13 @@
 from datetime import date, timedelta
 
+from app.models.habit import Completion, Skip
 from app.services.habit_service import (
     compute_streak,
     count_completions_in_week,
+    create_habit,
     is_at_risk,
     start_of_week,
+    uncomplete_habit,
 )
 
 
@@ -112,3 +115,30 @@ def test_not_at_risk_with_slack_left_in_the_week():
 def test_not_at_risk_early_in_the_week_even_if_behind():
     today = date(2026, 1, 5)  # Monday, 7 days left
     assert is_at_risk(3, 0, False, today) is False
+
+
+def test_uncomplete_habit_deletes_only_the_given_days_completion(db_session):
+    habit = create_habit(db_session, "Run")
+    db_session.add(Completion(habit_id=habit.id, day=date(2026, 1, 5)))
+    db_session.add(Completion(habit_id=habit.id, day=date(2026, 1, 6)))
+    db_session.commit()
+
+    result = uncomplete_habit(db_session, habit, date(2026, 1, 6))
+
+    assert result is habit
+    assert [c.day for c in habit.completions] == [date(2026, 1, 5)]
+
+
+def test_uncomplete_habit_leaves_skips_and_is_a_no_op_without_a_completion(db_session):
+    habit = create_habit(db_session, "Run")
+    db_session.add(Skip(habit_id=habit.id, day=date(2026, 1, 6)))
+    db_session.commit()
+
+    uncomplete_habit(db_session, habit, date(2026, 1, 6))
+    uncomplete_habit(db_session, habit, date(2026, 1, 6))
+
+    assert db_session.query(Completion).filter_by(habit_id=habit.id).count() == 0
+    assert (
+        db_session.query(Skip).filter_by(habit_id=habit.id, day=date(2026, 1, 6)).first()
+        is not None
+    )
