@@ -16,7 +16,7 @@ Related areas: `../habits/` (complete and freeze), `../streaks/` (streak and wee
 
 ## evidence
 
-(none yet)
+- [undo-today-server-1.verify.md](evidence/undo-today-server-1.verify.md): server slice 1 verification (`f709e49`, service `uncomplete_habit`), verdict green
 
 ## guides
 
