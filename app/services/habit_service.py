@@ -147,6 +147,15 @@ def unskip_habit(db: Session, habit: Habit, today: date) -> Habit:
     return habit
 
 
+def uncomplete_habit(db: Session, habit: Habit, today: date) -> Habit:
+    """Undo today's completion. Leaves any Skip untouched: the day becomes "neither" (DAY-1)."""
+    existing_completion = db.query(Completion).filter_by(habit_id=habit.id, day=today).first()
+    if existing_completion:
+        db.delete(existing_completion)
+        db.commit()
+    return habit
+
+
 def update_habit(
     db: Session,
     habit: Habit,
