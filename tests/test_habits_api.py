@@ -408,12 +408,12 @@ def test_uncomplete_only_affects_the_given_habit(client):
     second = client.post("/habits", json={"name": "Run"}).json()
     client.post(f"/habits/{first['id']}/complete")
     client.post(f"/habits/{second['id']}/complete")
-    resp = client.delete(f"/habits/{first['id']}/complete")
+    resp = client.delete(f"/habits/{second['id']}/complete")
     assert resp.status_code == 200
     assert resp.json()["completed_today"] is False
     habits = {h["id"]: h for h in client.get("/habits").json()}
-    assert habits[first["id"]]["completed_today"] is False
-    assert habits[second["id"]]["completed_today"] is True
+    assert habits[second["id"]]["completed_today"] is False
+    assert habits[first["id"]]["completed_today"] is True
     assert client.get("/habits/stats").json()["completed_today"] == 1
 
 
