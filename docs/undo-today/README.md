@@ -18,6 +18,7 @@ Related areas: `../habits/` (complete and freeze), `../streaks/` (streak and wee
 
 - [undo-today-server-1.verify.md](evidence/undo-today-server-1.verify.md): server slice 1 verification (`f709e49`, service `uncomplete_habit`), verdict green
 - [undo-today-server-2.verify.md](evidence/undo-today-server-2.verify.md): server slice 2 verification (`cc10249`, route `DELETE /habits/{habit_id}/complete`), verdict green; cross-repository contract frozen
+- [undo-today-feature.review.md](evidence/undo-today-feature.review.md): feature review of the whole server branch (`ceea25a..59fcd29`, slices 1 and 2 together), verdict green; two advisories stay advisory (test gaps, not defects: the tenth test does not pin habit scoping, no test pins a single `date.today()`), plus two pre-existing out-of-scope behaviours recorded for the Lead
 
 ## guides
 
