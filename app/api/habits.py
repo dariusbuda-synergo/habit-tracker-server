@@ -57,6 +57,16 @@ def complete_habit(habit_id: int, db: Session = Depends(get_db)):
     return habit_service.to_summary(habit, today)
 
 
+@router.delete("/{habit_id}/complete", response_model=HabitOut)
+def uncomplete_habit(habit_id: int, db: Session = Depends(get_db)):
+    habit = habit_service.get_habit(db, habit_id)
+    if habit is None:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    today = date.today()
+    habit_service.uncomplete_habit(db, habit, today)
+    return habit_service.to_summary(habit, today)
+
+
 @router.post("/{habit_id}/skip", response_model=HabitOut)
 def skip_habit(habit_id: int, db: Session = Depends(get_db)):
     habit = habit_service.get_habit(db, habit_id)
