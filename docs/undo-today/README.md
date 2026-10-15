@@ -17,6 +17,7 @@ Related areas: `../habits/` (complete and freeze), `../streaks/` (streak and wee
 ## evidence
 
 - [undo-today-server-1.verify.md](evidence/undo-today-server-1.verify.md): server slice 1 verification (`f709e49`, service `uncomplete_habit`), verdict green
+- [undo-today-server-2.verify.md](evidence/undo-today-server-2.verify.md): server slice 2 verification (`cc10249`, route `DELETE /habits/{habit_id}/complete`), verdict green; cross-repository contract frozen
 
 ## guides
 
