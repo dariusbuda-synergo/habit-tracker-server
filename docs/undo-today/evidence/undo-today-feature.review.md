@@ -4,11 +4,18 @@
 > Every number below is the observed output of a command named next to it. Never assumed,
 > never copied from the builder.
 
-Feature review of the whole server branch `feature/undo-today`: `git diff ceea25a..HEAD` at head
-`59fcd29`, base main `ceea25a`. Commits on the branch (`git log --oneline ceea25a..HEAD`): `474ddc4`
-contract and design, `f709e49` slice 1 (service), `f81ea81` verify 1, `cc10249` slice 2 (route),
-`59fcd29` verify 2. All commands were run from the worktree `.claude/worktrees/undo-today` with its
-`.venv` (Python 3.13.14, `.venv/bin/python --version`). `git status` before starting: clean.
+Feature review of the whole server branch `feature/undo-today`: `git diff ceea25a..HEAD`, reviewed at
+head `59fcd29` and re-checked at head `621e2a5` after the test fix-up, base main `ceea25a`. Commits on
+the branch (`git log --oneline ceea25a..HEAD`): `474ddc4` contract and design, `f709e49` slice 1
+(service), `f81ea81` verify 1, `cc10249` slice 2 (route), `59fcd29` verify 2, `ae3ab60` this review,
+`621e2a5` slice 2 fix-up (`pin the habit filter in the two-habit test`). All commands were run from
+the worktree `.claude/worktrees/undo-today` with its `.venv` (Python 3.13.14,
+`.venv/bin/python --version`). `git status` before starting and before the re-check: clean.
+
+**Re-check (`621e2a5`).** `git diff --name-only ae3ab60..621e2a5` → `tests/test_habits_api.py` only;
+`git diff --stat` → `1 file changed, 3 insertions(+), 3 deletions(-)`: the tenth test now undoes
+`second` and asserts `first` stays completed. No product code moved: the service file's `shasum` is
+still `72d2e01ac3f2`. Sections marked "re-check" below carry the numbers observed on `621e2a5`.
 
 Branch scope (`git diff --name-only ceea25a..HEAD`): 12 paths. Product code: `app/api/habits.py`
 (+10 lines, 0 removed) and `app/services/habit_service.py` (+9, 0 removed). Tests:
@@ -19,7 +26,9 @@ line). The other 8 paths are `docs/undo-today/**` (`git diff --stat ceea25a..HEA
 
 | Command | Result | Counts |
 |---|---|---|
-| `.venv/bin/python -m pytest -q` at `59fcd29` (branch head) | pass, exit 0 | `70 passed, 1 warning in 0.26s` |
+| `.venv/bin/python -m pytest -q` at `621e2a5` (branch head, re-check) | pass, exit 0 | `70 passed, 1 warning in 0.25s` |
+| `.venv/bin/python -m pytest -q -k uncomplete` at `621e2a5` (re-check) | pass | `12 passed, 58 deselected` |
+| `.venv/bin/python -m pytest -q` at `59fcd29` (head at first review) | pass, exit 0 | `70 passed, 1 warning in 0.26s` |
 | `.venv/bin/python -m pytest --collect-only -q` at `59fcd29` | n/a | `70 tests collected` |
 | same gate command on a `git archive ceea25a` export (scratch dir, same venv, `-p no:cacheprovider`) | pass, exit 0 | `58 passed, 1 warning in 0.20s` (baseline, matches `AGENTS.md § Mechanical gate`) |
 | `.venv/bin/python -m pytest -q tests/test_habit_service.py` at `59fcd29` | pass | `20 passed, 1 warning` |
@@ -28,10 +37,11 @@ line). The other 8 paths are `docs/undo-today/**` (`git diff --stat ceea25a..HEA
 | linter / formatter | n/a | none configured (`AGENTS.md § Mechanical gate`) |
 
 Delta 70 − 58 = **+12** for the whole branch: +2 (slice 1) and +10 (slice 2, the design's nine plus
-the Lead's tenth). The one warning is the starlette `anyio.abc.BlockingPortal` deprecation, present
-on the baseline export too. The gate was run once more after every mutation below was restored:
-`70 passed, 1 warning in 0.26s`, exit 0, `git status --short` printed 0 lines, `git diff --quiet HEAD`
-exit 0.
+the Lead's tenth); the fix-up changes the count by 0. The one warning is the starlette
+`anyio.abc.BlockingPortal` deprecation, present on the baseline export too. The gate was run once
+more after every mutation below was restored: `70 passed, 1 warning in 0.26s` at `59fcd29` and
+`70 passed, 1 warning in 0.24s` at `621e2a5` (re-check), exit 0 both times; `git status --short`
+printed 0 lines and `git diff --quiet HEAD` exited 0 after each.
 
 Frozen files (`AGENTS.md § Branching`): `git diff --quiet ceea25a..HEAD -- app/models/habit.py
 app/schemas.py requirements.txt requirements-dev.txt` → exit 0. Blob ids at base and head
@@ -145,7 +155,8 @@ branch's 12 tests (`-k uncomplete`) and my 16 probes were run, then `git checkou
 
 | Mutation | Full gate | `-k uncomplete` (12) | My probes (16) |
 |---|---|---|---|
-| M-A service: habit half dropped, `filter_by(day=today)` | **`70 passed`** | `12 passed` | `3 failed, 13 passed` (F5, F8, F14) |
+| M-A service: habit half dropped, `filter_by(day=today)` — at `59fcd29` | **`70 passed`** | `12 passed` | `3 failed, 13 passed` (F5, F8, F14) |
+| M-A again at `621e2a5` (re-check, after the test fix-up) | `1 failed, 69 passed` (`test_uncomplete_only_affects_the_given_habit`) | `1 failed, 11 passed` (same test); `-k only_affects` → `1 failed, 69 deselected` | not re-run (product code unchanged since `59fcd29`); the clean run after restore: `16 passed` |
 | M-B route: `to_summary(habit, date.today())` (second resolution) | **`70 passed`** | `12 passed` | `1 failed, 15 passed` (F13) |
 | M-C route: calls `unskip_habit` (wrong twin) | `7 failed, 63 passed` | `7 failed, 5 passed` | `9 failed, 7 passed` |
 | M-D service: day half dropped, `filter_by(habit_id=habit.id)` | `1 failed, 69 passed` | `1 failed, 11 passed` (service test 1) | `4 failed, 12 passed` |
@@ -160,7 +171,12 @@ lowest rowid, which is `first`'s own row, so the test passes (`70 passed` above)
 the habit half of the filter.** With the service mutated and the test edited in scratch to undo
 `second` instead (and the two `completed_today` assertions swapped), `pytest -q -k only_affects` →
 `1 failed, 69 deselected`; both files were then restored (`shasum` of the test file `c405237b0f03`
-before and after). That one-token change closes the gap. For scale: at the baseline no
+before and after). That one-token change closes the gap. **Re-check:** the slice 2 builder applied
+exactly that change as `621e2a5`. With M-A re-applied on that head, the full gate reports
+`1 failed, 69 passed` and the failing test is `test_uncomplete_only_affects_the_given_habit`; after
+`git checkout -- app/services/habit_service.py` the file's `shasum` is `72d2e01ac3f2` again, the
+pre-mutation value. The habit half of the filter is now pinned by the branch's own tests, and the
+slice 1 advisory is closed. For scale: at the baseline no
 `complete`/`skip`/`unskip` test creates two habits (`git show ceea25a:tests/test_habits_api.py`
 scanned with `awk`; the only two-habit test that calls `/complete` is
 `test_stats_weekly_completion_rate_is_a_percentage_of_targets`, which asserts a rate, not scoping),
@@ -170,7 +186,9 @@ so the branch adds the first scoping test for a per-habit mutation even if it is
 two; F13 can. M-E shows the same for `response_model` (`OUT-1`): dropping it still serialises the
 same JSON, so only an OpenAPI assertion sees it. Both are true of every sibling route on `main`.
 
-**Should the advisories block the Ship gate?** No; both stay advisory:
+**Should the advisories block the Ship gate?** No. After the re-check only the slice 2 advisory
+(single `date.today()`) remains open, and it stays advisory; the reasoning below was written for
+both and still applies to it:
 
 1. Neither is a product defect. The service and the route are byte-identical to the approved
    design, and habit scoping, single `today` resolution and the response model were each proven on
@@ -184,20 +202,21 @@ same JSON, so only an OpenAPI assertion sees it. Both are true of every sibling 
    this branch or a later chore; neither changes the frozen cross-repository contract the client
    slices are built on.
 
-The human should know that the tenth test, as it stands, is not evidence for habit scoping; the
-probes are.
+At `59fcd29` the tenth test was not evidence for habit scoping; since `621e2a5` it is.
 
 ## Verdict
 
-green. The whole branch (`ceea25a..59fcd29`) passes the mechanical gate at `70 passed`, +12 over
-the `58` baseline I measured on an export of the base. The four frozen files are unchanged. All seven
+green. The whole branch (`ceea25a..621e2a5`, re-checked after the test fix-up) passes the
+mechanical gate at `70 passed`, +12 over the `58` baseline I measured on an export of the base. The
+four frozen files are unchanged; the fix-up touched only `tests/test_habits_api.py`. All seven
 invariants (`DAY-1`, `STREAK-1`, `TIME-1`, `WEEK-1`, `OUT-1`, `DB-1`, `CORS-1`) hold on the branch
 head, checked by command and by probe, including `CORS-1` through the real middleware. Every settled
 decision that touches the server (D1, D2, D3, D5, A1, A6; D4, D6, D7, A7 add nothing server-side)
 holds, and the product code is byte-identical to the design. Sixteen cross-slice probes, four
-two-session concurrency interleavings and seven mutations found no defect; the two surviving
-mutations (M-A, M-B) and M-E are test gaps that the probes cover and that stay advisory for the
-reasons above. Two pre-existing, out-of-scope behaviours are recorded for the Lead (integer overflow
-on absurd ids, `Allow` header on 405). Nothing in the response would trip the client's
-`request<Habit>` replace-in-state pattern: the body is a full `HabitOut` with the same keys and types
-as the complete endpoint's.
+two-session concurrency interleavings and seven mutations found no defect. The habit-scoping mutation
+(M-A) that survived the tests at `59fcd29` now fails the branch's own tenth test at `621e2a5`, so the
+slice 1 advisory is closed; the remaining survivors (M-B, M-E) are test gaps the probes cover and
+stay advisory for the reasons above. Two pre-existing, out-of-scope behaviours are recorded for the
+Lead (integer overflow on absurd ids, `Allow` header on 405). Nothing in the response would trip the
+client's `request<Habit>` replace-in-state pattern: the body is a full `HabitOut` with the same keys
+and types as the complete endpoint's.
